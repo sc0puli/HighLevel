@@ -116,27 +116,89 @@ def lib_parser(path, name):
         if table.name == name:
             return table
 
-def find_round(table: Table, t_rise: float, c_out: float):
-    found_time, cap_found = False, False
-    t_index = 0
-    c_index = 0
+def find_round(table: Table, t_rise: float, c_out: float, edge: str):
+    found_time_exact, cap_found_exact = False, False
+    t_index, c_index = 0, 0
+    init_t_r, init_c_out = t_rise, c_out
 
     for i, time in enumerate(table.tr_time):
         if time == t_rise:
             t_index = i
-            found_time = True
+            found_time_exact = True
 
     for i, cap in enumerate(table.output_cap):
         if cap == c_out:
             c_index = i
-            cap_found = True
+            cap_found_exact = True
 
-    # print(found_time, cap_found)
+    if not found_time_exact:
+        i = 0
+        while t_rise > table.tr_time[i]:
+            i += 1
+        t_index = i
+        t_rise = table.output_cap[i]
+
+
+    if not cap_found_exact:
+        i = 0
+        while c_out > table.output_cap[i]:
+            i += 1
+        c_index = i
+        c_out = table.output_cap[i]
+
     # print(t_index, c_index)
-    if found_time and cap_found:
-        print(f'For element {table.name} and tr_inp {t_rise}, cap_out {c_out} was found tr_out {table.cell_rise[t_index][c_index]}\n')
 
+    if edge == 'posedge':
+        lut = table.cell_rise
+    elif edge == 'negedge':
+        lut = table.cell_fall
+    else:
+        print("[ERROR] Wrong edge type!")
+        return -1
+
+    if found_time_exact and cap_found_exact:
+        print(f'For element {table.name} and tr_inp {t_rise}, cap_out {c_out} was found exact tr_out {lut[t_index][c_index]}\n')
+    else:
+        print(f"For element {table.name} was not found exact value!\ntr_inp {init_t_r} was rounded to {t_rise}\ncap_out {init_c_out} was rounded to {c_out}\nFor rounded values was found tr_out {lut[t_index][c_index]}\n")
+
+def interpolate(x, x1, x2, q11, q21):
+    return ((x2 - x)/(x2 - x1)) * q11 + ((x-x1)/(x2-x1)) * q21
+
+def find_interpolate(table: Table, t_rise: float, c_out: float, edge: str):
+    if edge == 'posedge':
+        lut = table.cell_rise
+    elif edge == 'negedge':
+        lut = table.cell_fall
+    else:
+        print("[ERROR] Wrong edge type!")
+        return 1
+
+    t_left, t_right, c_left, c_right = 0, 0, 0, 0
+    init_t_r, init_c_out = t_rise, c_out
+
+    i = 0
+    while t_rise > table.tr_time[i]:
+        i += 1
+    t_left = table.tr_time[i]
+    t_right = table.tr_time[i + 1]
+
+    j = 0
+    while c_out > table.output_cap[j]:
+        j += 1
+    c_left = table.output_cap[j]
+    c_right = table.output_cap[j + 1]
+
+    Q11, Q12, Q21, Q22 = lut[i][j], lut[i][j + 1], lut[i + 1][j], lut[i + 1][j + 1]
+
+    f1 = interpolate(c_out, c_left, c_right, Q11, Q21)
+    f2 = interpolate(c_out, c_left, c_right, Q12, Q22)
+    f3 = interpolate(t_rise, t_left, t_right, f1, f2)
+
+    print(f'For element {table.name} and tr_inp {t_rise}, cap_out {c_out} was interpolated tr_out {f3}\n')
+
+    return f3
 
 if __name__ == '__main__':
-    lib_table = lib_parser('lab1.lib', 'INV')
-    find_round(lib_table, t_rise=0.4, c_out=0.4)
+    lib_table = lib_parser('lab1.lib', 'AND')
+    find_round(lib_table, t_rise=0.62, c_out=1.6, edge='posedge')
+    find_interpolate(lib_table, t_rise=0.62, c_out=1.6, edge='posedge')
