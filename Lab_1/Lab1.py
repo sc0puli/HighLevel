@@ -173,25 +173,24 @@ def find_interpolate(table: Table, t_rise: float, c_out: float, edge: str):
         print("[ERROR] Wrong edge type!")
         return 1
 
-    t_left, t_right, c_left, c_right = 0, 0, 0, 0
-    init_t_r, init_c_out = t_rise, c_out
-
     i = 0
     while t_rise > table.tr_time[i]:
         i += 1
-    t_left = table.tr_time[i]
-    t_right = table.tr_time[i + 1]
+    t_left = table.tr_time[i - 1]
+    t_right = table.tr_time[i]
 
     j = 0
     while c_out > table.output_cap[j]:
         j += 1
-    c_left = table.output_cap[j]
-    c_right = table.output_cap[j + 1]
+    c_left = table.output_cap[j - 1]
+    c_right = table.output_cap[j]
 
-    Q11, Q12, Q21, Q22 = lut[i][j], lut[i][j + 1], lut[i + 1][j], lut[i + 1][j + 1]
-
+    Q11, Q12, Q21, Q22 = lut[i - 1][j - 1], lut[i - 1][j], lut[i][j - 1], lut[i][j]
+    print(Q11, Q12, Q21, Q22)
     f1 = interpolate(c_out, c_left, c_right, Q11, Q21)
+    print(f1)
     f2 = interpolate(c_out, c_left, c_right, Q12, Q22)
+    print(f2)
     f3 = interpolate(t_rise, t_left, t_right, f1, f2)
 
     print(f'For element {table.name} and tr_inp {t_rise}, cap_out {c_out} was interpolated tr_out {f3}\n')
