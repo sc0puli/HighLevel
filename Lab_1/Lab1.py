@@ -136,7 +136,7 @@ def find_round(table: Table, t_rise: float, c_out: float, edge: str):
         while t_rise > table.tr_time[i]:
             i += 1
         t_index = i
-        t_rise = table.output_cap[i]
+        t_rise = table.tr_time[i]
 
 
     if not cap_found_exact:
@@ -186,11 +186,11 @@ def find_interpolate(table: Table, t_rise: float, c_out: float, edge: str):
     c_right = table.output_cap[j]
 
     Q11, Q12, Q21, Q22 = lut[i - 1][j - 1], lut[i - 1][j], lut[i][j - 1], lut[i][j]
-    print(Q11, Q12, Q21, Q22)
+    # print(Q11, Q12, Q21, Q22)
     f1 = interpolate(c_out, c_left, c_right, Q11, Q21)
-    print(f1)
+    # print(f1)
     f2 = interpolate(c_out, c_left, c_right, Q12, Q22)
-    print(f2)
+    # print(f2)
     f3 = interpolate(t_rise, t_left, t_right, f1, f2)
 
     print(f'For element {table.name} and tr_inp {t_rise}, cap_out {c_out} was interpolated tr_out {f3}\n')
@@ -199,5 +199,5 @@ def find_interpolate(table: Table, t_rise: float, c_out: float, edge: str):
 
 if __name__ == '__main__':
     lib_table = lib_parser('lab1.lib', 'AND')
-    find_round(lib_table, t_rise=0.62, c_out=1.6, edge='posedge')
-    find_interpolate(lib_table, t_rise=0.62, c_out=1.6, edge='posedge')
+    find_round(lib_table, t_rise=0.5, c_out=0.5, edge='posedge')
+    find_interpolate(lib_table, t_rise=0.5, c_out=0.5, edge='posedge')
