@@ -21,7 +21,6 @@ class Table:
 
 def lib_parser(name, path):
     curr_table = ''
-    print(f'MINETIKI {name} ')
     flag_sit = 0
     flag_coc = 0
     flag_inner_cap = 0
@@ -29,6 +28,7 @@ def lib_parser(name, path):
     flag_cr = 0
     flag_ft = 0
     flag_rt = 0
+    flag_name = 0
 
     with open(path, 'r', encoding='utf-8') as infile:
         for line in infile:
@@ -84,17 +84,19 @@ def lib_parser(name, path):
                 flag_sit = 1
             elif re.match("column_output_capacitance", line):
                 flag_coc = 1
-            elif re.match("capacitance", line):
+            elif re.match("capacitance", line) and flag_name:
                 flag_inner_cap = 1
-            elif re.match("cell_fall", line):
+            elif re.match("cell_fall", line) and flag_name:
                 flag_cf = 1
-            elif re.match("cell_rise", line):
+            elif re.match("cell_rise", line) and flag_name:
                 flag_cr = 1
-            elif re.match("fall_transition", line):
+            elif re.match("fall_transition", line) and flag_name:
                 flag_ft = 1
-            elif re.match("rise_transition", line):
+            elif re.match("rise_transition", line) and flag_name:
                 flag_rt = 1
             elif re.match(name, line):
+                flag_name = 1
                 curr_table = Table(line.replace('\n', ''), sit_np, coc_np)
 
+    flag_name = 0
     return curr_table
